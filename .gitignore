@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# .env files
+.env
+
+# Generated previews & samples
+preview_*.html
+samples/
+
+# Logs
+logs/
+
+# Claude-specific files
+CLAUDE.md
