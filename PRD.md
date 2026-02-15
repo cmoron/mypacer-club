@@ -11,7 +11,7 @@ Il transforme la corvée de la collecte des résultats du week-end en une opport
 * **Simplicité :** Un email "clé en main" reçu le lundi matin, prêt à être transféré ou partagé.
 
 ## 3. Stack Technique
-* **Langage :** Python 3.12+
+* **Langage :** Python 3.13+
 * **Gestionnaire de paquets :** `uv` (remplace pip/venv).
 * **Scraping :** `requests`, `beautifulsoup4`, `lxml`.
 * **Emailing :** Resend API.
