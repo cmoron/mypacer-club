@@ -14,7 +14,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "freezegun>=1.4",
     "mypy>=1.19.1",
+    "pytest>=8.0",
     "ruff>=0.15.1",
     "types-beautifulsoup4>=4.12.0.20250516",
     "types-requests>=2.32.4.20260107",
@@ -31,3 +33,7 @@ ignore_missing_imports = true  # Pour éviter les erreurs sur 'resend' ou 'lxml'
 warn_return_any = true
 warn_unused_configs = true
 files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
