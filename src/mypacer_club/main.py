@@ -1,6 +1,7 @@
 import argparse
 import os
 from datetime import datetime
+from typing import Any
 
 try:
     from dotenv import load_dotenv
@@ -30,19 +31,22 @@ def main() -> None:
     if args.sample:
         print(f"📂 Chargement du sample : {args.sample}")
         soup = scraper.load_local_page(args.sample)
+        soups = [soup]
     else:
-        print(f"🔄 Scraping du club {args.club}...")
         year = datetime.now().year
-        soup, raw_html = scraper.fetch_club_page(args.club, year)
+        soups, raw_html = scraper.fetch_all_club_pages(args.club, year)
+        print(f"🔄 Scraping du club {args.club} ({len(soups)} page(s))...")
 
         if args.save_sample:
             with open(args.save_sample, "w", encoding="utf-8") as f:
                 f.write(raw_html)
             print(f"💾 Sample sauvegardé : {args.save_sample}")
 
-    club_name = scraper.extract_club_name(soup, args.club)
+    club_name = scraper.extract_club_name(soups[0], args.club)
 
-    raw_data = scraper.parse_raw_results(soup)
+    raw_data: list[dict[str, Any]] = []
+    for s in soups:
+        raw_data.extend(scraper.parse_raw_results(s))
     print(f"   -> {len(raw_data)} résultats bruts trouvés.")
 
     # 2. Analyse
