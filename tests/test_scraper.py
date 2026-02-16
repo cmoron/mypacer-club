@@ -90,7 +90,7 @@ class TestParseRawResults:
         assert first["nom"] == "DUPONT Marie"
         assert first["epreuve"] == "100m - Salle / SEF"
         assert first["place"] == 1
-        assert first["perf"] == "11''45"
+        assert first["perf"] == "11\"45"
         assert first["tour"] == "Finale"
         assert first["points"] == 1061 or first["points"] == 1100
         assert first["date"] == "12/02"

@@ -4,6 +4,7 @@ from freezegun import freeze_time
 
 from mypacer_club.reporter import (
     _generate_cards,
+    _generate_congrats,
     _generate_dashboard,
     format_html_report,
     send_email,
@@ -43,6 +44,33 @@ class TestGenerateDashboard:
     def test_empty_lists(self):
         html = _generate_dashboard([], [])
         assert ">0<" in html
+
+    def test_niveau_national_label(self, make_result):
+        html = _generate_dashboard([make_result()], [])
+        assert "Perfs IR et Nat." in html
+
+
+# ── _generate_congrats ──────────────────────────────────────────────
+
+
+class TestGenerateCongrats:
+    def test_with_highlights(self, make_result):
+        recent = [make_result(nom="A"), make_result(nom="B")]
+        highlights = [make_result()]
+        html = _generate_congrats(recent, highlights)
+        assert "Bravo" in html
+        assert "performances remarquables" in html
+        assert "2 athlètes" in html
+
+    def test_without_highlights(self, make_result):
+        recent = [make_result(nom="A"), make_result(nom="B")]
+        html = _generate_congrats(recent, [])
+        assert "en compétition" in html
+        assert "Bravo" not in html
+
+    def test_no_results(self):
+        html = _generate_congrats([], [])
+        assert html == ""
 
 
 # ── _generate_cards ──────────────────────────────────────────────────
@@ -126,7 +154,7 @@ class TestGenerateCards:
 # ── format_html_report ───────────────────────────────────────────────
 
 
-@freeze_time("2026-02-15")
+@freeze_time("2026-02-17")
 class TestFormatHtmlReport:
     def test_contains_club_name(self, make_result):
         html = format_html_report("US TALENCE", [make_result()], [])
@@ -134,16 +162,16 @@ class TestFormatHtmlReport:
 
     def test_contains_date(self, make_result):
         html = format_html_report("Club", [make_result()], [])
-        assert "15/02" in html
+        assert "09/02" in html
 
     def test_highlights_section_present(self, make_result):
         hl = [make_result(is_podium=True, place=1)]
         html = format_html_report("Club", [make_result()], hl)
-        assert "Podiums et performances" in html
+        assert "Podiums et hautes performances" in html
 
     def test_highlights_section_absent_when_empty(self, make_result):
         html = format_html_report("Club", [make_result()], [])
-        assert "Podiums et performances" not in html
+        assert "Podiums et hautes performances" not in html
 
     def test_no_competition_message(self):
         html = format_html_report("Club", [], [])
@@ -153,6 +181,31 @@ class TestFormatHtmlReport:
         recent = [make_result(), make_result()]
         html = format_html_report("Club", recent, [])
         assert "Résultats (2)" in html
+
+    def test_congrats_with_highlights(self, make_result):
+        hl = [make_result(is_podium=True, place=1)]
+        html = format_html_report("Club", [make_result()], hl)
+        assert "Bravo" in html
+        assert "performances remarquables" in html
+
+    def test_congrats_without_highlights(self, make_result):
+        html = format_html_report("Club", [make_result()], [])
+        assert "en compétition" in html
+        assert "Bravo" not in html
+
+    def test_congrats_no_results(self):
+        html = format_html_report("Club", [], [])
+        assert "Bravo" not in html
+        assert "en compétition" not in html
+
+    def test_highlights_golden_background(self, make_result):
+        hl = [make_result(is_podium=True, place=1)]
+        html = format_html_report("Club", [make_result()], hl)
+        assert "#fffbeb" in html
+
+    def test_footer_cta(self, make_result):
+        html = format_html_report("Club", [make_result()], [])
+        assert "Partagez" in html
 
 
 # ── send_email ───────────────────────────────────────────────────────

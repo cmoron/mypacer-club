@@ -82,6 +82,13 @@ def parse_raw_results(soup: BeautifulSoup) -> list[dict[str, Any]]:
         perf = re.sub(r"^\d+\.\s*", "", resultat_brut)
         perf = re.sub(r"\s*(?<![Dd])[Qq]\s*$", "", perf).strip()
 
+        # 1. Remplacement des double single quotes '' par double quote "
+        perf = perf.replace("''", '"')
+
+        # 2. Ajout espace avant temps réaction: 7"78(0.123) -> 7"78 (0.123)
+        # On cherche un chiffre suivi d'une parenthèse ouvrante
+        perf = re.sub(r"(\d)\(", r"\1 (", perf)
+
         points = 0
         try:
             points = int(cells[5].get_text(strip=True))
