@@ -84,7 +84,7 @@ class TestExtractClubName:
 class TestParseRawResults:
     def test_extracts_all_data_rows(self, sample_soup: BeautifulSoup):
         results = parse_raw_results(sample_soup)
-        assert len(results) == 9
+        assert len(results) == 11
 
     def test_first_result_fields(self, sample_soup: BeautifulSoup):
         results = parse_raw_results(sample_soup)
@@ -108,12 +108,26 @@ class TestParseRawResults:
     def test_qualif_q_detected(self, sample_soup: BeautifulSoup):
         results = parse_raw_results(sample_soup)
         leroy = next(r for r in results if r["nom"] == "LEROY Emma")
-        assert leroy["qualif"] is True
+        assert leroy["qualif"] == "q"
 
     def test_dq_not_confused_with_q(self, sample_soup: BeautifulSoup):
         results = parse_raw_results(sample_soup)
         lascaux = next(r for r in results if r["nom"] == "LASCAUX Alix")
-        assert lascaux["qualif"] is False
+        assert lascaux["qualif"] is None
+
+    def test_qualif_qi_detected(self, sample_soup: BeautifulSoup):
+        results = parse_raw_results(sample_soup)
+        garcia = next(r for r in results if r["nom"] == "GARCIA Leo")
+        assert garcia["qualif"] == "qi"
+        assert "qi" not in garcia["perf"]
+        assert garcia["perf"] == "35'18\""
+
+    def test_qualif_qe_detected(self, sample_soup: BeautifulSoup):
+        results = parse_raw_results(sample_soup)
+        petit = next(r for r in results if r["nom"] == "PETIT Clara")
+        assert petit["qualif"] == "qe"
+        assert "qe" not in petit["perf"]
+        assert petit["perf"] == "12'45\""
 
     def test_points_parsed(self, sample_soup: BeautifulSoup):
         results = parse_raw_results(sample_soup)

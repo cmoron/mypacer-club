@@ -114,11 +114,14 @@ def _generate_cards(items: list[dict[str, Any]], is_highlight: bool = False) -> 
             meta.append(f"<span style='color:#334155;'>{txt}</span>")
 
         meta_html = " &bull; ".join(meta)
-        qualif = (
-            '<span style="background:#dbeafe; color:#1e40af; padding:1px 4px; border-radius:3px; font-size:12px; font-weight:bold; margin-left:5px;">Q</span>'
-            if r["qualif"]
-            else ""
-        )
+        qualif = ""
+        if r["qualif"]:
+            q_label = r["qualif"].upper()
+            if r["qualif"] == "qe":
+                q_bg, q_color = "#f3e8ff", "#6b21a8"
+            else:
+                q_bg, q_color = "#dbeafe", "#1e40af"
+            qualif = f'<span style="background:{q_bg}; color:{q_color}; padding:1px 4px; border-radius:3px; font-size:12px; font-weight:bold; margin-left:5px;">{q_label}</span>'
         tour = (
             f" - <span style='color:#64748b; font-style:italic;'>{r['tour']}</span>"
             if r["tour"]

@@ -25,7 +25,7 @@ def make_result():
         tour: str = "",
         points: int = 0,
         place: int | None = None,
-        qualif: bool = False,
+        qualif: str | None = None,
         niveau: str = "",
         date: str = "12/02",
         ville: str = "Paris",

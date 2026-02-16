@@ -101,10 +101,11 @@ def parse_raw_results(soup: BeautifulSoup) -> list[dict[str, Any]]:
         if match_place:
             place = int(match_place.group(1))
 
-        qualif = bool(re.search(r"(?<![Dd])[Qq]\s*$", resultat_brut))
+        qualif_match = re.search(r"(?<![Dd])([Qq](?:[IiEe])?)\s*$", resultat_brut)
+        qualif = qualif_match.group(1).lower() if qualif_match else None
 
         perf = re.sub(r"^\d+\.\s*", "", resultat_brut)
-        perf = re.sub(r"\s*(?<![Dd])[Qq]\s*$", "", perf).strip()
+        perf = re.sub(r"\s*(?<![Dd])[Qq](?:[IiEe])?\s*$", "", perf).strip()
 
         # 1. Remplacement des double single quotes '' par double quote "
         perf = perf.replace("''", '"')

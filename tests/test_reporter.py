@@ -117,15 +117,30 @@ class TestGenerateCards:
         html = _generate_cards(items, is_highlight=False)
         assert "\U0001f947" not in html
 
-    def test_qualif_badge(self, make_result):
-        items = [make_result(qualif=True)]
+    def test_qualif_badge_q(self, make_result):
+        items = [make_result(qualif="q")]
         html = _generate_cards(items)
         assert ">Q<" in html
+        assert "#dbeafe" in html
+
+    def test_qualif_badge_qi(self, make_result):
+        items = [make_result(qualif="qi")]
+        html = _generate_cards(items)
+        assert ">QI<" in html
+        assert "#dbeafe" in html
+
+    def test_qualif_badge_qe(self, make_result):
+        items = [make_result(qualif="qe")]
+        html = _generate_cards(items)
+        assert ">QE<" in html
+        assert "#f3e8ff" in html
 
     def test_no_qualif_badge(self, make_result):
-        items = [make_result(qualif=False)]
+        items = [make_result(qualif=None)]
         html = _generate_cards(items)
         assert ">Q<" not in html
+        assert ">QI<" not in html
+        assert ">QE<" not in html
 
     def test_date_ville_header(self, make_result):
         items = [make_result(date="12/02", ville="Paris")]

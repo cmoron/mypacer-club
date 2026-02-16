@@ -109,7 +109,7 @@ class TestExtractHighlights:
         assert len(hl) == 0
 
     def test_qualification_q_is_highlight(self, make_result):
-        results = [make_result(qualif=True, niveau="")]
+        results = [make_result(qualif="q", niveau="")]
         hl = _extract_highlights(results)
         assert len(hl) == 1
 
@@ -139,7 +139,7 @@ class TestExtractHighlights:
         assert len(hl) == 0
 
     def test_is_podium_flag_false_for_qualif_only(self, make_result):
-        results = [make_result(qualif=True, place=None, niveau="")]
+        results = [make_result(qualif="q", place=None, niveau="")]
         hl = _extract_highlights(results)
         assert hl[0]["is_podium"] is False
 
