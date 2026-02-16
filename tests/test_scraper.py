@@ -5,7 +5,9 @@ import pytest
 from bs4 import BeautifulSoup
 
 from mypacer_club.scraper import (
+    _get_total_pages,
     extract_club_name,
+    fetch_all_club_pages,
     fetch_club_page,
     load_local_page,
     parse_raw_results,
@@ -90,7 +92,7 @@ class TestParseRawResults:
         assert first["nom"] == "DUPONT Marie"
         assert first["epreuve"] == "100m - Salle / SEF"
         assert first["place"] == 1
-        assert first["perf"] == "11\"45"
+        assert first["perf"] == '11"45'
         assert first["tour"] == "Finale"
         assert first["points"] == 1061 or first["points"] == 1100
         assert first["date"] == "12/02"
@@ -149,3 +151,93 @@ class TestParseRawResults:
         results = parse_raw_results(sample_soup)
         kovanov = next(r for r in results if "KOVANOV" in r["nom"])
         assert kovanov["niveau"] == "N2"
+
+
+# ── _get_total_pages ───────────────────────────────────────────────
+
+
+class TestGetTotalPages:
+    def test_pagination_5_pages(self):
+        html = '<span class="select-text">Page > 001/005 <</span>'
+        soup = BeautifulSoup(html, "lxml")
+        assert _get_total_pages(soup) == 5
+
+    def test_no_pagination(self):
+        soup = BeautifulSoup("<html><body></body></html>", "lxml")
+        assert _get_total_pages(soup) == 1
+
+    def test_single_page(self):
+        html = '<span class="select-text">Page > 001/001 <</span>'
+        soup = BeautifulSoup(html, "lxml")
+        assert _get_total_pages(soup) == 1
+
+
+# ── fetch_club_page (position) ────────────────────────────────────
+
+
+class TestFetchClubPagePosition:
+    @patch("mypacer_club.scraper.requests.get")
+    def test_with_position(self, mock_get: MagicMock):
+        mock_response = MagicMock()
+        mock_response.text = "<html><body>OK</body></html>"
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        fetch_club_page("033033", 2026, position=2)
+
+        call_url = mock_get.call_args[0][0]
+        assert "frmposition=2" in call_url
+
+    @patch("mypacer_club.scraper.requests.get")
+    def test_without_position(self, mock_get: MagicMock):
+        mock_response = MagicMock()
+        mock_response.text = "<html><body>OK</body></html>"
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        fetch_club_page("033033", 2026)
+
+        call_url = mock_get.call_args[0][0]
+        assert "frmposition" not in call_url
+
+
+# ── fetch_all_club_pages ──────────────────────────────────────────
+
+
+class TestFetchAllClubPages:
+    @patch("mypacer_club.scraper.requests.get")
+    def test_single_page_no_extra_requests(self, mock_get: MagicMock):
+        mock_response = MagicMock()
+        mock_response.text = "<html><body>No pagination</body></html>"
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        soups, raw = fetch_all_club_pages("033033", 2026)
+
+        assert len(soups) == 1
+        assert mock_get.call_count == 1
+
+    @patch("mypacer_club.scraper.requests.get")
+    def test_multi_page_fetches_all(self, mock_get: MagicMock):
+        page1_html = (
+            "<html><body>"
+            '<span class="select-text">Page > 001/003 <</span>'
+            "</body></html>"
+        )
+        other_html = "<html><body>Page N</body></html>"
+
+        mock_resp_1 = MagicMock()
+        mock_resp_1.text = page1_html
+        mock_resp_1.raise_for_status = MagicMock()
+
+        mock_resp_n = MagicMock()
+        mock_resp_n.text = other_html
+        mock_resp_n.raise_for_status = MagicMock()
+
+        mock_get.side_effect = [mock_resp_1, mock_resp_n, mock_resp_n]
+
+        soups, raw = fetch_all_club_pages("033033", 2026)
+
+        assert len(soups) == 3
+        assert mock_get.call_count == 3
+        assert raw == page1_html

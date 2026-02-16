@@ -24,9 +24,22 @@ def load_local_page(filepath: str) -> BeautifulSoup:
         sys.exit(1)
 
 
-def fetch_club_page(club_id: str, year: int) -> tuple[BeautifulSoup, str]:
+def _get_total_pages(soup: BeautifulSoup) -> int:
+    """Parse la pagination athle.fr et retourne le nombre total de pages."""
+    span = soup.find("span", class_="select-text")
+    if not span:
+        return 1
+    match = re.search(r"(\d+)/(\d+)", span.get_text())
+    return int(match.group(2)) if match else 1
+
+
+def fetch_club_page(
+    club_id: str, year: int, position: int = 0
+) -> tuple[BeautifulSoup, str]:
     """Récupère le HTML de la page résultats. Retourne (soup, html_brut)."""
     url = BASE_URL.format(club_id=club_id, year=year)
+    if position > 0:
+        url += f"&frmposition={position}"
     try:
         response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=40)
         response.raise_for_status()
@@ -34,6 +47,17 @@ def fetch_club_page(club_id: str, year: int) -> tuple[BeautifulSoup, str]:
         print(f"Erreur HTTP : {e}", file=sys.stderr)
         sys.exit(1)
     return BeautifulSoup(response.text, "lxml"), response.text
+
+
+def fetch_all_club_pages(club_id: str, year: int) -> tuple[list[BeautifulSoup], str]:
+    """Récupère toutes les pages de résultats. Retourne (soups, html_page1)."""
+    first_soup, raw_html = fetch_club_page(club_id, year)
+    total = _get_total_pages(first_soup)
+    soups = [first_soup]
+    for i in range(1, total):
+        soup, _ = fetch_club_page(club_id, year, position=i)
+        soups.append(soup)
+    return soups, raw_html
 
 
 def extract_club_name(soup: BeautifulSoup, default_id: str) -> str:
