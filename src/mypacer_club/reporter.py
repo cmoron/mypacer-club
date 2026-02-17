@@ -189,6 +189,16 @@ def format_html_report(
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; background-color: #ffffff; margin: 0; padding: 0;">
         <div style="display:none; max-height:0; overflow:hidden;">{preheader}</div>
         <div style="max-width: 600px; margin: 0 auto; padding: 10px;">
+
+            <!-- Bouton copier : masqué par défaut, révélé par JS (invisible dans les emails) -->
+            <div id="copy-wrapper" style="display:none; text-align:right; margin-bottom: 12px;">
+                <button id="copy-btn" style="display:inline-flex; align-items:center; gap:6px; background-color:transparent; color:#1e40af; border:1px solid #bfdbfe; padding:6px 14px; border-radius:6px; font-size:13px; font-weight:500; font-family:inherit; cursor:pointer; letter-spacing:0.01em; transition:background-color 0.15s, border-color 0.15s, color 0.15s;">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;"><rect x="5" y="5" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-7A1.5 1.5 0 0 0 1 3.5v7A1.5 1.5 0 0 0 2.5 12H4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Copier
+                </button>
+            </div>
+
+            <div id="report-content">
             <div style="text-align:center; margin-bottom: 25px;">
                 <h1 style="color: #111; font-size: 22px; margin-bottom: 5px; font-weight: 800; letter-spacing: -0.5px;">{club_name}</h1>
                 <div style="color: #475569; font-size: 14px;">Résultats de la semaine du {week_str}</div>
@@ -208,7 +218,91 @@ def format_html_report(
                 <p>Généré par <strong>MyPacer Club</strong>.</p>
                 <p>Données: www.athle.fr</p>
             </div>
+            </div>
         </div>
+
+        <script>
+        (function() {{
+            var wrapper = document.getElementById('copy-wrapper');
+            var btn = document.getElementById('copy-btn');
+            if (!wrapper || !btn) return;
+            wrapper.style.display = 'block';
+
+            var ICON_COPY = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;"><rect x="5" y="5" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-7A1.5 1.5 0 0 0 1 3.5v7A1.5 1.5 0 0 0 2.5 12H4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+            var ICON_CHECK = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;"><path d="M2.5 8.5L6 12L13.5 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+            btn.addEventListener('mouseenter', function() {{
+                if (!btn.dataset.success) {{
+                    btn.style.backgroundColor = '#eff6ff';
+                    btn.style.borderColor = '#93c5fd';
+                }}
+            }});
+            btn.addEventListener('mouseleave', function() {{
+                if (!btn.dataset.success) {{
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.borderColor = '#bfdbfe';
+                }}
+            }});
+            btn.addEventListener('mousedown', function() {{
+                if (!btn.dataset.success) {{
+                    btn.style.backgroundColor = '#dbeafe';
+                }}
+            }});
+            btn.addEventListener('mouseup', function() {{
+                if (!btn.dataset.success) {{
+                    btn.style.backgroundColor = '#eff6ff';
+                }}
+            }});
+
+            function setSuccess() {{
+                btn.dataset.success = '1';
+                btn.innerHTML = ICON_CHECK + 'Copié';
+                btn.style.backgroundColor = '#f0fdf4';
+                btn.style.borderColor = '#bbf7d0';
+                btn.style.color = '#166534';
+                setTimeout(function() {{
+                    delete btn.dataset.success;
+                    btn.innerHTML = ICON_COPY + 'Copier';
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.borderColor = '#bfdbfe';
+                    btn.style.color = '#1e40af';
+                }}, 2000);
+            }}
+
+            btn.addEventListener('click', function() {{
+                var content = document.getElementById('report-content');
+                if (!content) return;
+
+                var html = content.innerHTML;
+                var text = content.innerText;
+
+                if (navigator.clipboard && navigator.clipboard.write) {{
+                    navigator.clipboard.write([
+                        new ClipboardItem({{
+                            'text/html': new Blob([html], {{type: 'text/html'}}),
+                            'text/plain': new Blob([text], {{type: 'text/plain'}})
+                        }})
+                    ]).then(setSuccess).catch(function() {{
+                        fallbackCopy(text);
+                    }});
+                }} else {{
+                    fallbackCopy(text);
+                }}
+            }});
+
+            function fallbackCopy(text) {{
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                setSuccess();
+            }}
+        }})();
+        </script>
     </body>
     </html>
     """
